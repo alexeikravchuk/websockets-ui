@@ -1,11 +1,11 @@
 import { WebSocketServer, WebSocket } from "ws";
-import User from "../User.js";
+import UserController from "../controllers/UserController";
 import { UserMessage } from '../types';
 
 export const wss: WebSocketServer = new WebSocketServer({port: 3000});
 
 wss.on("connection", (ws: WebSocket) => {
-  const user: User = new User(ws.send.bind(ws));
+  const user: UserController = new UserController(ws.send.bind(ws));
   ws.on("error", (err: Error) => console.error(err));
 
   ws.on("message", function message(data: string | Buffer) {
@@ -19,4 +19,3 @@ wss.on("connection", (ws: WebSocket) => {
 
   ws.on("close", () => user.handleClose());
 });
-
