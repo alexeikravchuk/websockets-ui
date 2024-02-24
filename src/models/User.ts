@@ -1,15 +1,20 @@
 import { UserData } from '../types';
+import db from '../db';
+import { getUUID } from '../utils/getUUID';
 
 export class User implements UserData {
-  id: number;
+  static nextId = 0;
+  id: string;
   name: string;
   password: string;
   games: string[];
   gamesWon: number = 0;
 
-  constructor(id: number, name: string, password: string) {
-    this.id = id;
+  constructor(name: string, password: string) {
+    this.id = getUUID();
     this.name = name;
     this.password = password;
+
+    db.addValue("users", this);
   }
 }

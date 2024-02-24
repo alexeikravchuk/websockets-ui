@@ -1,11 +1,11 @@
 import db from '../db';
-import { Game } from '../models/Game';
-import { GameData, WinData } from '../types';
+import { UserData, WinData } from '../types';
+import Room from '../models/Room';
 import { User } from '../models/User';
 
 class GameController {
   private static instance: GameController;
-  private static nextId = 0;
+  private rooms: Map<string, Room> = new Map();
 
   static getInstance(): GameController {
     if (!GameController.instance) {
@@ -17,16 +17,34 @@ class GameController {
   private constructor() {
   }
 
-  createGame(creatorId: number): GameData {
-    const id = GameController.nextId++;
-    const game = new Game(id, creatorId);
-    db.addValue('games', game);
-    return game;
+  createRoom(creator: UserData): Room {
+    const room = new Room(creator);
+    const indexRoom = room.roomID;
+    this.rooms.set(indexRoom, room);
+    return room;
+  }
+
+  addToRoom(indexRoom: string, user: User): Room {
+    const room = this.rooms.get(indexRoom);
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    room.addUser(user);
+    room.createGame();
+
+    return room;
+  }
+
+  getAvailableRooms(): Room[] {
+    return [...this.rooms.values()].filter((room) => room.users.length < 2);
   }
 
   getWinners(): WinData[] {
-    const users = (db.getCollection('users') || []) as User[];
-    return users.map((user) => ({name: user.name, wins: user.gamesWon}));
+    const users = (db.getCollection('users') || []) as UserData[];
+    const winnersData = users.map((user) => ({name: user.name, wins: user.gamesWon}));
+    return winnersData.filter((user) => user.wins > 0);
   }
 }
 

@@ -1,11 +1,13 @@
 import { FIELD_STATE, GameData } from '../types';
+import { getUUID } from '../utils/getUUID';
 
 const getEmptyField = () => {
   return Array(10).fill(Array(10).fill(FIELD_STATE.EMPTY));
 };
 
 export class Game implements GameData {
-  gameId: number;
+  static nextId = 0;
+  id: string;
   creatorId: number;
   isStarted: boolean = false;
   members: string[] = [];
@@ -16,9 +18,8 @@ export class Game implements GameData {
   winner: string = '';
   memberTurn: string = '';
 
-  constructor(id: number, creatorId: number) {
-    this.gameId = id;
-    this.creatorId = creatorId;
-    this.members.push(creatorId.toString());
+  constructor(member1Id: string, member2Id: string) {
+    this.id = getUUID();
+    this.members.push(member1Id, member2Id);
   }
 }

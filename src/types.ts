@@ -1,3 +1,6 @@
+import { User } from './models/User';
+import { Game } from './models/Game';
+
 export type UserMessage = {
   id: string;
   type: string;
@@ -6,12 +9,18 @@ export type UserMessage = {
 
 export enum MessageType {
   REG = "reg",
-  CREATE_GAME = "create_room",
-  UPDATE_WINNERS = "update_winners",
-  ADD_SHIPS = "add_ships",
+  CREATE_GAME = "create_game",
+  CREATE_ROOM = "create_room",
+  ADD_TO_ROOM = "add_user_to_room",
   START_GAME = "start_game",
+  ADD_SHIPS = "add_ships",
   ERROR = "error",
   SINGLE_PLAY = "single_play",
+  TURN = "turn",
+  ATTACK = "attack",
+  FINISH = "finish",
+  UPDATE_ROOM = "update_room",
+  UPDATE_WINNERS = "update_winners",
 }
 
 export enum FIELD_STATE {
@@ -22,7 +31,7 @@ export enum FIELD_STATE {
 }
 
 export interface GameData {
-  gameId: number;
+  id: string;
   creatorId: number;
   isStarted: boolean;
   members: string[];
@@ -40,9 +49,16 @@ export type WinData = {
 };
 
 export interface UserData {
-  id: number;
+  id: string;
   name: string;
   password: string;
   games: string[];
   gamesWon: number;
+}
+
+export interface RoomData {
+  creator: User;
+  games: Game[];
+  currentGame: Game;
+  roomID: string;
 }
