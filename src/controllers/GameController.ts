@@ -63,6 +63,10 @@ class GameController {
   attack(room: Room, data: AttackData): AttackResult {
     const game = room.currentGame;
 
+    if (data.indexPlayer !== game.memberTurn) {
+      return {result: FIELD_STATE.EMPTY, error: 'Not your turn'};
+    }
+
     const result = game.attack(data);
 
     if (result !== FIELD_STATE.KILLED) {

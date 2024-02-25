@@ -75,6 +75,7 @@ export type AttackResult = {
   result: FIELD_STATE;
   markedCells?: [number, number][];
   winner?: string;
+  error?: string;
 }
 
 export interface GameData {

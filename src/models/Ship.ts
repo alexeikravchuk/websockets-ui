@@ -28,15 +28,15 @@ export default class Ship implements ShipData {
 
   private fillPositions(): void {
     const {direction, length, start} = this;
-    const [x, y] = start;
+    const [x, y] = start; // x - column, y - row
 
     if (direction) {
       for (let i = 0; i < length; i++) {
-        this.positions.push([x + i, y]);
+        this.positions.push([x, y + i]);
       }
     } else {
       for (let i = 0; i < length; i++) {
-        this.positions.push([x, y + i]);
+        this.positions.push([x + i, y]);
       }
     }
   }

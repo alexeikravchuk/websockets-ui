@@ -37,7 +37,7 @@ class ConnectionController {
 
   handleMessage(msg: UserMessage): void {
     const id = +msg.id;
-    console.log("handling message", msg);
+    // console.log("handling message", msg);
 
     const data = isJSON(msg.data) && JSON.parse(msg.data);
 
@@ -167,7 +167,16 @@ class ConnectionController {
   }
 
   private attack(data: AttackData, id: number): void {
-    const {result, markedCells, winner} = ConnectionController.gameController.attack(this.currentRoom, data);
+    const {
+      result,
+      markedCells,
+      winner,
+      error,
+    } = ConnectionController.gameController.attack(this.currentRoom, data);
+
+    if (error) {
+      return this.sendError(id, error);
+    }
 
     const {members} = this.currentRoom.currentGame;
     ConnectionController.broadcastData({
@@ -268,11 +277,29 @@ class ConnectionController {
   }
 
   handleClose(): void {
+    this.enemyWin(0)
     ConnectionController.users.delete(this.userData.id);
     ConnectionController.gameController.logoutUser(this.userData);
     ConnectionController.updateRooms(0);
 
-    console.log("closing connection");
+    console.log("user disconnected", this.userData.id);
+  }
+
+  private enemyWin(id: number): void {
+    const {currentRoom} = this;
+    const otherUser = currentRoom.users.find((user) => user.id !== this.userData.id);
+
+    if (otherUser) {
+      ConnectionController.broadcastData({
+        idUsers: [otherUser.id],
+        type: MessageType.FINISH,
+        data: {
+          winPlayer: otherUser?.id,
+        },
+        id,
+      });
+      ConnectionController.updateWinners(0);
+    }
   }
 }
 

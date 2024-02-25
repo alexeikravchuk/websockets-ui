@@ -3,7 +3,11 @@ import { getUUID } from '../utils/getUUID';
 import Ship from './Ship';
 
 const getEmptyField = () => {
-  return Array(10).fill(Array(10).fill(FIELD_STATE.EMPTY));
+  const field = new Array(10).fill(null);
+  field.forEach((_, i) => {
+    field[i] = new Array(10).fill(FIELD_STATE.EMPTY);
+  });
+  return field;
 };
 
 export class Game implements GameData {
@@ -51,20 +55,18 @@ export class Game implements GameData {
       const {position, direction, length} = ship;
       const {x, y} = position;
 
-      if (direction) {
+      if (direction) { // vertical
+        const row = field[x]!;
         for (let i = 0; i < length; i++) {
-          const row = field[x + i];
-          if (!row) return;
-          row[y] = FIELD_STATE.SHIP;
+          row[y + i] = FIELD_STATE.SHIP;
         }
       } else {
         for (let i = 0; i < length; i++) {
-          const row = field[x];
-          if (!row) return;
-          row[y + i] = FIELD_STATE.SHIP;
+          field[x + i]![y] = FIELD_STATE.SHIP;
         }
       }
     });
+    console.log(ships, field)
   }
 
   getShips(memberId: string): ShipParams[] {
@@ -98,6 +100,7 @@ export class Game implements GameData {
 
       return MISS;
     }
+
 
     const targetShip = this.getShipFromField(x, y, indexPlayer);
     if (!targetShip) throw new Error('Ship not found');
@@ -136,25 +139,25 @@ export class Game implements GameData {
 
   markCellsAroundShip(data: AttackData): [number, number][] {
     const {x, y, indexPlayer} = data;
-    const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;
+    // const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;
 
     const targetShip = this.getShipFromField(x, y, indexPlayer);
     if (!targetShip) throw new Error('Ship not found');
 
     const markedCells: [number, number][] = [];
 
-    targetShip.positions.forEach(([posX, posY]) => {
-      for (let i = -1; i < 2; i++) {
-        for (let j = -1; j < 2; j++) {
-          const row = field[posX + i];
-          const cell = row && row[posY + j];
-          if (cell && cell === FIELD_STATE.EMPTY) {
-            row[posY + j] = FIELD_STATE.MISS;
-            markedCells.push([posX + i, posY + j]);
-          }
-        }
-      }
-    });
+    /*targetShip.positions.forEach(([posX, posY]) => {
+     for (let i = -1; i < 2; i++) {
+     for (let j = -1; j < 2; j++) {
+     const row = field[posX + i];
+     const cell = row && row[posY + j];
+     if (cell && cell === FIELD_STATE.EMPTY) {
+     row[posY + j] = FIELD_STATE.MISS;
+     markedCells.push([posX + i, posY + j]);
+     }
+     }
+     }
+     });*/
 
     return markedCells;
   }
