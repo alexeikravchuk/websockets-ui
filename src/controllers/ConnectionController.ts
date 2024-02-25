@@ -46,8 +46,8 @@ class ConnectionController {
         return this.playSingle(id);
       case MessageType.ADD_SHIPS:
         return this.addShips(data, id);
-        case MessageType.ATTACK:
-          return this.attack(data, id);
+      case MessageType.ATTACK:
+        return this.attack(data, id);
       default:
         this.sendError(id, 'Invalid message type')
     }
@@ -152,11 +152,28 @@ class ConnectionController {
         }
       });
     });
+
+    this.sendTurn(id);
   }
 
   private attack(data: AttackData, id: number): void {
     ConnectionController.gameController.attack(this.currentRoom, data);
+
     console.log("attacking", id);
+
+    this.sendTurn(id);
+  }
+
+  private sendTurn(id: number): void {
+    const {memberTurn, members} = this.currentRoom.currentGame
+    ConnectionController.broadcastData({
+      idUsers: members,
+      id,
+      type: MessageType.TURN,
+      data: {
+        currentPlayer: memberTurn,
+      }
+    })
   }
 
   private updateWinners(id: number): void {

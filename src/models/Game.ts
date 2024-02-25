@@ -26,10 +26,10 @@ export class Game implements GameData {
     if (this.members.length !== 2) return;
 
     this.isStarted = true;
-    this.memberTurn = this.members[0]!;
+    this.setTurn(this.members[0]!);
   }
 
-  setTurn(memberId: string): void {
+  private setTurn(memberId: string): void {
     this.memberTurn = memberId;
   }
 
