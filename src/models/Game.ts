@@ -119,6 +119,21 @@ export class Game implements GameData {
     return result;
   }
 
+  getEnemyEmptyCells(playerIndex: string): [number, number][] {
+    const field = playerIndex === this.members[0] ? this.member2Field : this.member1Field;
+    const emptyCells: [number, number][] = [];
+
+    field.forEach((row, i) => {
+      row.forEach((cell, j) => {
+        if (cell === FIELD_STATE.EMPTY) {
+          emptyCells.push([i, j]);
+        }
+      });
+    });
+
+    return emptyCells;
+  }
+
   markCellsAroundShip(data: AttackData): [number, number][] {
     const {x, y, indexPlayer} = data;
     const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;

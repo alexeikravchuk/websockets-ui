@@ -73,6 +73,14 @@ class GameController {
     return {result, markedCells, winner: game.winner};
   }
 
+  getRandomEnemyCoords(room: Room, data: { indexPlayer: string }): [number, number] {
+    const game = room.currentGame;
+    const emptyCells = game.getEnemyEmptyCells(data.indexPlayer);
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    return emptyCells[randomIndex] || [0, 0];
+  }
+
+
   isGameReady(room: Room): boolean {
     const game = room.currentGame;
     if (!game) return false;

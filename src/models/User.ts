@@ -7,7 +7,7 @@ export class User implements UserData {
   name: string;
   password: string;
   currentRoom: string = '';
-  games: string[];
+  games: string[] = [];
   gamesWon: number = 0;
 
   constructor(name: string, password: string) {

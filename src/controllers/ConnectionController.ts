@@ -54,6 +54,8 @@ class ConnectionController {
         return this.addShips(data, id);
       case MessageType.ATTACK:
         return this.attack(data, id);
+      case MessageType.RANDOM_ATTACK:
+        return this.randomAttack(data, id);
       default:
         this.sendError(id, 'Invalid message type')
     }
@@ -208,6 +210,11 @@ class ConnectionController {
     }
 
     this.sendTurn(id);
+  }
+
+  private randomAttack(data: { indexPlayer: string, gameId: string }, id: number): void {
+    const [x, y] = ConnectionController.gameController.getRandomEnemyCoords(this.currentRoom, data);
+    this.attack({x, y, ...data}, id)
   }
 
   private sendTurn(id: number): void {

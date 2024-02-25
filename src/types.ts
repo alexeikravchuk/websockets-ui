@@ -19,6 +19,7 @@ export enum MessageType {
   SINGLE_PLAY = "single_play",
   TURN = "turn",
   ATTACK = "attack",
+  RANDOM_ATTACK = "randomAttack",
   FINISH = "finish",
   UPDATE_ROOM = "update_room",
   UPDATE_WINNERS = "update_winners",
