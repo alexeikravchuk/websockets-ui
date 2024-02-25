@@ -1,5 +1,5 @@
 import db from '../db';
-import { UserData, WinData } from '../types';
+import { AddShipsData, AttackData, Ship, UserData, WinData } from '../types';
 import Room from '../models/Room';
 import { User } from '../models/User';
 
@@ -17,7 +17,7 @@ class GameController {
   private constructor() {
   }
 
-  createRoom(creator: UserData): Room {
+  createRoom(creator: User): Room {
     const room = new Room(creator);
     const indexRoom = room.roomID;
     this.rooms.set(indexRoom, room);
@@ -32,6 +32,7 @@ class GameController {
     }
 
     room.addUser(user);
+
     room.createGame();
 
     return room;
@@ -45,6 +46,42 @@ class GameController {
     const users = (db.getCollection('users') || []) as UserData[];
     const winnersData = users.map((user) => ({name: user.name, wins: user.gamesWon}));
     return winnersData.filter((user) => user.wins > 0);
+  }
+
+  addShips({room, userId, ships}: AddShipsData): void {
+    const game = room.currentGame;
+    if (!game) return;
+
+    game.setShips(userId, ships);
+  }
+
+  getShips(room: Room, userId: string): Ship[] {
+    const game = room.currentGame;
+    return game.getShips(userId);
+  }
+
+  attack(room: Room, data: AttackData) {
+    const game = room.currentGame;
+
+    game.attack(data);
+  }
+
+  isGameReady(room: Room): boolean {
+    const game = room.currentGame;
+    if (!game) return false;
+
+    const isReady = game.isReady();
+
+    if (isReady) {
+      game.startGame();
+    }
+
+    return isReady;
+  }
+
+  logoutUser(user: User): void {
+    const room = this.rooms.get(user.currentRoom);
+    room?.removeUser(user);
   }
 }
 

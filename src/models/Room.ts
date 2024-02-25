@@ -6,12 +6,11 @@ import { getUUID } from '../utils/getUUID';
 
 export default class Room implements RoomData {
   static rooms: Map<string, Room> = new Map();
-  static nextId = 0;
 
   creator: User;
   users: User[] = [];
 
-  games: Game[];
+  games: Game[] = [];
   currentGame: Game;
   roomID: string;
 
@@ -21,6 +20,7 @@ export default class Room implements RoomData {
     this.users.push(creator);
 
     Room.rooms.set(this.roomID, this);
+    creator.joinRoom(this.roomID);
   }
 
   addUser(user: User): void {
@@ -28,7 +28,17 @@ export default class Room implements RoomData {
 
     if (users.includes(user)) return;
 
+    user.joinRoom(this.roomID);
     users.push(user);
+  }
+
+  removeUser(user: User): void {
+    const users = this.users;
+    const index = users.indexOf(user);
+
+    if (index === -1) return;
+
+    users.splice(index, 1);
   }
 
   createGame(): Game | null {
@@ -43,5 +53,10 @@ export default class Room implements RoomData {
     this.currentGame = game;
 
     return game;
+  }
+
+
+  playGame(gameId: string): void {
+    this.users.forEach(user => user.playGame(gameId));
   }
 }

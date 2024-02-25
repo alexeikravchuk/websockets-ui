@@ -1,5 +1,6 @@
 import { User } from './models/User';
 import { Game } from './models/Game';
+import Room from './models/Room';
 
 export type UserMessage = {
   id: string;
@@ -30,13 +31,42 @@ export enum FIELD_STATE {
   HIT = 3,
 }
 
+export type BroadcastDataParams = {
+  idUsers: string[];
+  id: number;
+  type: string;
+  data: any;
+}
+
+type ShipType = 'huge' | 'large' | 'medium' | 'small';
+
+export type Ship = {
+  direction: boolean;
+  length: number;
+  position: { x: number, y: number };
+  type: ShipType;
+}
+
+export type AddShipsData = {
+  room: Room;
+  userId: string;
+  ships: Ship[];
+};
+
+export type AttackData = {
+  gameId: string;
+  indexPlayer: string;
+  x: number;
+  y: number;
+};
+
 export interface GameData {
   id: string;
   creatorId: number;
   isStarted: boolean;
   members: string[];
-  member1Ships: { [key: string]: number[][] };
-  member2Ships: { [key: string]: number[][] };
+  member1Ships: Ship[];
+  member2Ships: Ship[];
   member1Field: FIELD_STATE[][];
   member2Field: FIELD_STATE[][];
   winner: string;
@@ -54,6 +84,7 @@ export interface UserData {
   password: string;
   games: string[];
   gamesWon: number;
+  currentRoom: string;
 }
 
 export interface RoomData {
