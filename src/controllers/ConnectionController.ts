@@ -1,5 +1,5 @@
 import GameController from "./GameController";
-import { AttackData, BroadcastDataParams, MessageType, Ship, UserMessage } from '../types';
+import { AttackData, BroadcastDataParams, FIELD_STATE, MessageType, ShipParams, UserMessage } from '../types';
 import { isJSON } from '../utils/isJSON';
 import { User } from '../models/User';
 import * as console from 'console';
@@ -20,6 +20,12 @@ class ConnectionController {
   static updateRooms(id: number): void {
     for (let user of this.users.values()) {
       user.updateAvailableRooms(id);
+    }
+  }
+
+  static updateWinners(id: number): void {
+    for (let user of this.users.values()) {
+      user.updateWinners(id);
     }
   }
 
@@ -87,7 +93,7 @@ class ConnectionController {
     this.sendData(id, MessageType.REG, dataToSend);
 
     this.updateAvailableRooms(id);
-    this.updateWinners(id);
+    ConnectionController.updateWinners(id);
   }
 
   private createRoom(id: number): void {
@@ -121,7 +127,7 @@ class ConnectionController {
     ConnectionController.updateRooms(id);
   }
 
-  private addShips(data: { ships: Ship[] }, id: number): void {
+  private addShips(data: { ships: ShipParams[] }, id: number): void {
     if (!this.currentRoom) return this.sendError(id, 'Invalid data');
 
     const {ships} = data;
@@ -137,7 +143,9 @@ class ConnectionController {
   }
 
   private startGame(id: number): void {
-    this.currentRoom.users.forEach((user) => {
+    const {currentRoom} = this;
+    currentRoom.playGame();
+    currentRoom.users.forEach((user) => {
       const {id: idPlayer} = user;
 
       const ships = ConnectionController.gameController.getShips(this.currentRoom, idPlayer);
@@ -157,9 +165,47 @@ class ConnectionController {
   }
 
   private attack(data: AttackData, id: number): void {
-    ConnectionController.gameController.attack(this.currentRoom, data);
+    const {result, markedCells, winner} = ConnectionController.gameController.attack(this.currentRoom, data);
 
-    console.log("attacking", id);
+    const {members} = this.currentRoom.currentGame;
+    ConnectionController.broadcastData({
+      idUsers: members,
+      type: MessageType.ATTACK,
+      data: {
+        status: result,
+        currentPlayer: this.userData.id,
+        position: {x: data.x, y: data.y},
+      },
+      id,
+    })
+
+    if (markedCells && markedCells.length) {
+      markedCells.forEach(([x, y]) => {
+        ConnectionController.broadcastData({
+          idUsers: members,
+          type: MessageType.ATTACK,
+          data: {
+            status: FIELD_STATE.MISS,
+            currentPlayer: this.userData.id,
+            position: {x, y},
+          },
+          id,
+        });
+      });
+    }
+
+    if (winner) {
+      ConnectionController.broadcastData({
+        idUsers: members,
+        type: MessageType.FINISH,
+        data: {
+          winPlayer: winner,
+        },
+        id,
+      });
+
+      return ConnectionController.updateWinners(id);
+    }
 
     this.sendTurn(id);
   }

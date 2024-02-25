@@ -1,5 +1,5 @@
 import db from '../db';
-import { AddShipsData, AttackData, Ship, UserData, WinData } from '../types';
+import { AddShipsData, AttackData, AttackResult, FIELD_STATE, ShipParams, UserData, WinData } from '../types';
 import Room from '../models/Room';
 import { User } from '../models/User';
 
@@ -55,15 +55,22 @@ class GameController {
     game.setShips(userId, ships);
   }
 
-  getShips(room: Room, userId: string): Ship[] {
+  getShips(room: Room, userId: string): ShipParams[] {
     const game = room.currentGame;
     return game.getShips(userId);
   }
 
-  attack(room: Room, data: AttackData) {
+  attack(room: Room, data: AttackData): AttackResult {
     const game = room.currentGame;
 
-    game.attack(data);
+    const result = game.attack(data);
+
+    if (result !== FIELD_STATE.KILLED) {
+      return {result};
+    }
+
+    const markedCells = game.markCellsAroundShip(data);
+    return {result, markedCells, winner: game.winner};
   }
 
   isGameReady(room: Room): boolean {

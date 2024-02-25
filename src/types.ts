@@ -25,10 +25,11 @@ export enum MessageType {
 }
 
 export enum FIELD_STATE {
-  EMPTY = 0,
-  SHIP = 1,
-  MISS = 2,
-  HIT = 3,
+  EMPTY = 'empty',
+  SHIP = 'ship',
+  MISS = 'miss',
+  SHOT = 'shot',
+  KILLED = 'killed'
 }
 
 export type BroadcastDataParams = {
@@ -40,17 +41,26 @@ export type BroadcastDataParams = {
 
 type ShipType = 'huge' | 'large' | 'medium' | 'small';
 
-export type Ship = {
+export type ShipParams = {
   direction: boolean;
   length: number;
   position: { x: number, y: number };
   type: ShipType;
 }
 
+export interface ShipData {
+  direction: boolean;
+  length: number;
+  start: [number, number];
+  type: ShipType;
+  positions: [number, number][];
+
+}
+
 export type AddShipsData = {
   room: Room;
   userId: string;
-  ships: Ship[];
+  ships: ShipParams[];
 };
 
 export type AttackData = {
@@ -60,13 +70,19 @@ export type AttackData = {
   y: number;
 };
 
+export type AttackResult = {
+  result: FIELD_STATE;
+  markedCells?: [number, number][];
+  winner?: string;
+}
+
 export interface GameData {
   id: string;
   creatorId: number;
   isStarted: boolean;
   members: string[];
-  member1Ships: Ship[];
-  member2Ships: Ship[];
+  member1Ships: ShipData[];
+  member2Ships: ShipData[];
   member1Field: FIELD_STATE[][];
   member2Field: FIELD_STATE[][];
   winner: string;

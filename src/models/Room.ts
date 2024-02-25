@@ -3,7 +3,6 @@ import { RoomData } from '../types';
 import { User } from './User';
 import { getUUID } from '../utils/getUUID';
 
-
 export default class Room implements RoomData {
   static rooms: Map<string, Room> = new Map();
 
@@ -56,7 +55,8 @@ export default class Room implements RoomData {
   }
 
 
-  playGame(gameId: string): void {
-    this.users.forEach(user => user.playGame(gameId));
+  playGame(): void {
+    const {currentGame, users} = this;
+    users.forEach(user => user.playGame(currentGame.id));
   }
 }
