@@ -15,7 +15,7 @@ export class User implements UserData {
     this.name = name;
     this.password = password;
 
-    db.addValue("users", {name, password, id: this.id});
+    db.addValue("users", {name, password, id: this.id, gamesWon: 0});
   }
 
   playGame(gameId: string): void {
@@ -24,6 +24,7 @@ export class User implements UserData {
 
   winGame(): void {
     this.gamesWon++;
+    db.updateValue("users", this.id, {gamesWon: this.gamesWon})
   }
 
   joinRoom(roomId: string): void {

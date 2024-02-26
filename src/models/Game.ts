@@ -1,14 +1,9 @@
 import { AttackData, AttackResult, FIELD_STATE, GameData, ShipParams } from '../types';
 import { getUUID } from '../utils/getUUID';
+import { getEmptyField } from '../utils/getEmptyField';
 import Ship from './Ship';
 
-const getEmptyField = () => {
-  const field = new Array(10).fill(null);
-  field.forEach((_, i) => {
-    field[i] = new Array(10).fill(FIELD_STATE.EMPTY);
-  });
-  return field;
-};
+
 
 export class Game implements GameData {
   id: string;
@@ -66,7 +61,6 @@ export class Game implements GameData {
         }
       }
     });
-    console.log(ships, field)
   }
 
   getShips(memberId: string): ShipParams[] {

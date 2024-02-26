@@ -40,7 +40,7 @@ export type BroadcastDataParams = {
   data: any;
 }
 
-type ShipType = 'huge' | 'large' | 'medium' | 'small';
+export type ShipType = 'huge' | 'large' | 'medium' | 'small';
 
 export type ShipParams = {
   direction: boolean;

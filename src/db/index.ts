@@ -1,6 +1,9 @@
 export class Database {
   private static instance: Database;
-  private constructor() {}
+
+  private constructor() {
+  }
+
   private data: Map<string, any[]> = new Map();
 
   public static getInstance() {
@@ -65,7 +68,7 @@ export class Database {
       return;
     }
 
-    collection[index] = values;
+    collection[index] = {...collection[index], ...values};
   }
 
   clearCollection(collectionName: string) {

@@ -12,6 +12,7 @@ import { isJSON } from '../utils/isJSON';
 import { User } from '../models/User';
 import * as console from 'console';
 import Room from '../models/Room';
+import { GameBot } from './GameBot';
 
 
 class ConnectionController {
@@ -45,7 +46,6 @@ class ConnectionController {
 
   handleMessage(msg: UserMessage): void {
     const id = +msg.id;
-    // console.log("handling message", msg);
 
     const data = isJSON(msg.data) && JSON.parse(msg.data);
 
@@ -276,7 +276,11 @@ class ConnectionController {
 
 
   private playSingle(id: number): void {
+
     console.log("playing single", id);
+    this.createRoom(id)
+    const currentRoom = this.currentRoom;
+    new GameBot(currentRoom);
   }
 
   private sendError(id: number, errorText: string): void {
