@@ -74,8 +74,16 @@ export type AttackData = {
 export type AttackResult = {
   result: FIELD_STATE;
   markedCells?: [number, number][];
+  killedPositions?: [number, number][];
   winner?: string;
   error?: string;
+}
+
+export type AttackResponseParams = {
+  members: string[],
+  result: FIELD_STATE,
+  position: { x: number, y: number },
+  id: number
 }
 
 export interface GameData {

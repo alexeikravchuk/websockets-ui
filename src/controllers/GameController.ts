@@ -69,12 +69,11 @@ class GameController {
 
     const result = game.attack(data);
 
-    if (result !== FIELD_STATE.KILLED) {
-      return {result};
+    if (result.winner) {
+      room.users.find(user => user.id === result.winner)?.winGame();
     }
 
-    const markedCells = game.markCellsAroundShip(data);
-    return {result, markedCells, winner: game.winner};
+    return result;
   }
 
   getRandomEnemyCoords(room: Room, data: { indexPlayer: string }): [number, number] {
@@ -83,7 +82,6 @@ class GameController {
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     return emptyCells[randomIndex] || [0, 0];
   }
-
 
   isGameReady(room: Room): boolean {
     const game = room.currentGame;

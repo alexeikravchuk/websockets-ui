@@ -13,7 +13,9 @@ wss.on("connection", (ws: WebSocket) => {
       const message = JSON.parse(data.toString()) as UserMessage;
       user.handleMessage(message);
     } catch (e) {
-      console.error(e);
+      // @ts-ignore
+      const message = e.message;
+      ws.send(JSON.stringify({type: "error", data: message}));
     }
   });
 

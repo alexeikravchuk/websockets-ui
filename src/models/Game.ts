@@ -1,4 +1,4 @@
-import { AttackData, FIELD_STATE, GameData, ShipParams } from '../types';
+import { AttackData, AttackResult, FIELD_STATE, GameData, ShipParams } from '../types';
 import { getUUID } from '../utils/getUUID';
 import Ship from './Ship';
 
@@ -81,18 +81,23 @@ export class Game implements GameData {
     return firsReady && secondReady;
   }
 
-  attack(data: AttackData): FIELD_STATE {
+  private getAttackResult(data: AttackData): FIELD_STATE {
     const {x, y, indexPlayer} = data;
     if (indexPlayer !== this.memberTurn) throw new Error('Not your turn');
 
-    const {SHOT, MISS, SHIP} = FIELD_STATE
+    const {SHOT, MISS, SHIP, EMPTY} = FIELD_STATE
 
     const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;
 
     const row = field[x]!;
     const cell = row[y]!;
 
-    let result = row[y] = cell === SHIP ? SHOT : MISS;
+    const isCellEmpty = cell === EMPTY;
+    const isCellShip = cell === SHIP;
+
+    if (!isCellEmpty && !isCellShip) throw new Error('Cell is not empty');
+
+    let result = row[y] = isCellShip ? SHOT : MISS;
 
     if (result === MISS) {
       const nextTurn = indexPlayer === this.members[0] ? this.members[1]! : this.members[0]!;
@@ -101,11 +106,11 @@ export class Game implements GameData {
       return MISS;
     }
 
-
     const targetShip = this.getShipFromField(x, y, indexPlayer);
     if (!targetShip) throw new Error('Ship not found');
 
     const isKilled = targetShip.isKilled(field);
+
     if (!isKilled) {
       return SHOT;
     }
@@ -120,6 +125,20 @@ export class Game implements GameData {
     }
 
     return result;
+  }
+
+  attack(data: AttackData): AttackResult {
+    const result = this.getAttackResult(data);
+
+    if (result !== FIELD_STATE.KILLED) {
+      return {result};
+    }
+
+    const markedCells = this.markCellsAroundShip(data);
+    const shipKilled = this.getShipFromField(data.x, data.y, data.indexPlayer);
+    const killedPositions = shipKilled!.positions;
+
+    return {result, markedCells, winner: this.winner, killedPositions};
   }
 
   getEnemyEmptyCells(playerIndex: string): [number, number][] {
@@ -137,27 +156,27 @@ export class Game implements GameData {
     return emptyCells;
   }
 
-  markCellsAroundShip(data: AttackData): [number, number][] {
+  private markCellsAroundShip(data: AttackData): [number, number][] {
     const {x, y, indexPlayer} = data;
-    // const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;
+    const field = indexPlayer === this.members[0] ? this.member2Field : this.member1Field;
 
     const targetShip = this.getShipFromField(x, y, indexPlayer);
     if (!targetShip) throw new Error('Ship not found');
 
     const markedCells: [number, number][] = [];
 
-    /*targetShip.positions.forEach(([posX, posY]) => {
-     for (let i = -1; i < 2; i++) {
-     for (let j = -1; j < 2; j++) {
-     const row = field[posX + i];
-     const cell = row && row[posY + j];
-     if (cell && cell === FIELD_STATE.EMPTY) {
-     row[posY + j] = FIELD_STATE.MISS;
-     markedCells.push([posX + i, posY + j]);
-     }
-     }
-     }
-     });*/
+    targetShip.positions.forEach(([posX, posY]) => {
+      for (let i = -1; i < 2; i++) {
+        for (let j = -1; j < 2; j++) {
+          const row = field[posX + i];
+          const cell = row && row[posY + j];
+          if (cell && cell === FIELD_STATE.EMPTY) {
+            row[posY + j] = FIELD_STATE.MISS;
+            markedCells.push([posX + i, posY + j]);
+          }
+        }
+      }
+    });
 
     return markedCells;
   }

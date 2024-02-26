@@ -1,5 +1,13 @@
 import GameController from "./GameController";
-import { AttackData, BroadcastDataParams, FIELD_STATE, MessageType, ShipParams, UserMessage } from '../types';
+import {
+  AttackData,
+  AttackResponseParams,
+  BroadcastDataParams,
+  FIELD_STATE,
+  MessageType,
+  ShipParams,
+  UserMessage
+} from '../types';
 import { isJSON } from '../utils/isJSON';
 import { User } from '../models/User';
 import * as console from 'console';
@@ -172,6 +180,7 @@ class ConnectionController {
       markedCells,
       winner,
       error,
+      killedPositions
     } = ConnectionController.gameController.attack(this.currentRoom, data);
 
     if (error) {
@@ -179,29 +188,18 @@ class ConnectionController {
     }
 
     const {members} = this.currentRoom.currentGame;
-    ConnectionController.broadcastData({
-      idUsers: members,
-      type: MessageType.ATTACK,
-      data: {
-        status: result,
-        currentPlayer: this.userData.id,
-        position: {x: data.x, y: data.y},
-      },
-      id,
-    })
+    const {x, y} = data;
+    this.attackResponse({members, result, position: {x, y}, id})
 
     if (markedCells && markedCells.length) {
       markedCells.forEach(([x, y]) => {
-        ConnectionController.broadcastData({
-          idUsers: members,
-          type: MessageType.ATTACK,
-          data: {
-            status: FIELD_STATE.MISS,
-            currentPlayer: this.userData.id,
-            position: {x, y},
-          },
-          id,
-        });
+        this.attackResponse({members, result: FIELD_STATE.MISS, position: {x, y}, id});
+      });
+    }
+
+    if (killedPositions && killedPositions.length) {
+      killedPositions.forEach(([x, y]) => {
+        this.attackResponse({members, result: FIELD_STATE.KILLED, position: {x, y}, id});
       });
     }
 
@@ -219,6 +217,23 @@ class ConnectionController {
     }
 
     this.sendTurn(id);
+  }
+
+
+  private attackResponse(params: AttackResponseParams,): void {
+    const {members, result, position, id} = params;
+    const currentPlayer = this.userData.id;
+
+    ConnectionController.broadcastData({
+      idUsers: members,
+      type: MessageType.ATTACK,
+      data: {
+        status: result,
+        currentPlayer,
+        position,
+      },
+      id,
+    })
   }
 
   private randomAttack(data: { indexPlayer: string, gameId: string }, id: number): void {
