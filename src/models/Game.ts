@@ -43,6 +43,7 @@ export class Game implements GameData {
       this.member2Ships = shipsData;
       this.fillField(this.member2Field, ships);
     }
+
   }
 
   private fillField(field: FIELD_STATE[][], ships: ShipParams[]): void {

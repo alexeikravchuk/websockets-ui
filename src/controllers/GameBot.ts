@@ -4,6 +4,7 @@ import ConnectionController from './ConnectionController';
 import { getUUID } from '../utils/getUUID';
 import { getEmptyField } from '../utils/getEmptyField';
 import { FIELD_STATE, MessageType, ShipParams, ShipType } from '../types';
+import * as console from 'console';
 
 export class GameBot {
   static counter: number = 0;
@@ -21,8 +22,9 @@ export class GameBot {
   constructor(room: Room) {
     this.room = room;
     this.initBotUser();
-    this.addToRoom();
-    this.addShips();
+
+    this.delayCall(this.addToRoom.bind(this), 200);
+    this.delayCall(this.addShips.bind(this), 200);
   }
 
   private handleMessages(message: string) {
@@ -45,13 +47,23 @@ export class GameBot {
         return this.handleAttack(dataObj);
       }
       case MessageType.TURN: {
-        return this.handleTurn(dataObj);
+        return this.delayCall(() => this.handleTurn(dataObj), 200);
       }
     }
   }
 
-  handleAttack(data: unknown) {
-    console.log("bot attack", data);
+  handleAttack(data: { status: FIELD_STATE, position: { x: number, y: number }, currentPlayer: string }) {
+    if (data.currentPlayer !== this.indexPlayer) {
+      const {x, y} = data.position;
+      const row = this.field[x];
+      if (!row) return;
+
+      row[y] = data.status as FIELD_STATE;
+
+      console.log("Enemy attack", data.status, data.position);
+    } else {
+      console.log("Bot attack", data.status, data.position);
+    }
   }
 
   handleTurn(data: { currentPlayer: string }) {
@@ -101,12 +113,15 @@ export class GameBot {
   }
 
   private generateShipsData(): ShipParams[] {
-    const ships = SHIPS_TEMPLATE.map((ship) => {
+    let ships = SHIPS_TEMPLATE.map((ship) => {
       const type = ship.type as ShipType;
       const length = ship.length;
       const {position, direction} = this.getNextShipFromField(ship.length);
       return {position, direction, length, type}
     });
+
+    // @ts-ignore
+    ships = fields[Math.random() * fields.length >> 0]
 
     this.ships = ships;
 
@@ -147,7 +162,35 @@ export class GameBot {
       }
     }
 
+    this.fillField({position: {x, y}, direction, length})
+
+
     return {position: {x, y}, direction};
+  }
+
+
+  private fillField(ship: {
+    direction: boolean;
+    length: number;
+    position: { x: number, y: number }
+  }) {
+    const {position, direction, length} = ship;
+    const {x, y} = position;
+    const {field} = this;
+
+    if (direction) { // vertical
+      for (let i = 0; i < length; i++) {
+        field[x + i]![y] = FIELD_STATE.SHIP;
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        field[x]![y + i] = FIELD_STATE.SHIP;
+      }
+    }
+  }
+
+  private delayCall(callback: () => void, delay: number) {
+    setTimeout(callback, delay);
   }
 }
 
@@ -192,4 +235,111 @@ const SHIPS_TEMPLATE = [
     length: 1,
     type: "small"
   }
+]
+
+const fields: ShipParams[][] = [
+  [{position: {x: 7, y: 5}, direction: true, type: "huge", length: 4}, {
+    position: {x: 0, y: 2},
+    direction: false,
+    type: "large",
+    length: 3
+  }, {position: {x: 8, y: 0}, direction: true, type: "large", length: 3}, {
+    position: {x: 2, y: 7},
+    direction: false,
+    type: "medium",
+    length: 2
+  }, {position: {x: 4, y: 2}, direction: true, type: "medium", length: 2}, {
+    position: {x: 0, y: 4},
+    direction: false,
+    type: "medium",
+    length: 2
+  }, {position: {x: 5, y: 0}, direction: true, type: "small", length: 1}, {
+    position: {x: 6, y: 2},
+    direction: true,
+    type: "small",
+    length: 1
+  }, {position: {x: 0, y: 6}, direction: false, type: "small", length: 1}, {
+    position: {x: 9, y: 4},
+    direction: false,
+    type: "small",
+    length: 1
+  }],
+  [{position: {x: 2, y: 0}, direction: false, type: "huge", length: 4}, {
+    position: {x: 0, y: 4},
+    direction: true,
+    type: "large",
+    length: 3
+  }, {position: {x: 2, y: 2}, direction: true, type: "large", length: 3}, {
+    position: {x: 3, y: 6},
+    direction: false,
+    type: "medium",
+    length: 2
+  }, {position: {x: 7, y: 6}, direction: false, type: "medium", length: 2}, {
+    position: {x: 4, y: 3},
+    direction: false,
+    type: "medium",
+    length: 2
+  }, {position: {x: 0, y: 2}, direction: false, type: "small", length: 1}, {
+    position: {x: 1, y: 8},
+    direction: true,
+    type: "small",
+    length: 1
+  }, {position: {x: 3, y: 8}, direction: true, type: "small", length: 1}, {
+    position: {x: 8, y: 8},
+    direction: false,
+    type: "small",
+    length: 1
+  }],
+  [{direction: true, length: 4, position: {x: 4, y: 5}, type: "huge"}, {
+    direction: true,
+    length: 3,
+    position: {x: 3, y: 0},
+    type: "large"
+  }, {direction: false, length: 3, position: {x: 0, y: 4}, type: "large"}, {
+    direction: false,
+    length: 2,
+    position: {x: 0, y: 8},
+    type: "medium"
+  }, {direction: true, length: 2, position: {x: 9, y: 2}, type: "medium"}, {
+    direction: false,
+    length: 2,
+    position: {x: 0, y: 2},
+    type: "medium"
+  }, {direction: false, length: 1, position: {x: 5, y: 1}, type: "small"}, {
+    direction: false,
+    length: 1,
+    position: {x: 1, y: 6},
+    type: "small"
+  }, {direction: true, length: 1, position: {x: 8, y: 0}, type: "small"}, {
+    direction: true,
+    length: 1,
+    position: {x: 6, y: 7},
+    type: "small"
+  }],
+  [{direction: true, length: 4, position: {x: 5, y: 2}, type: "huge"}, {
+    direction: false,
+    length: 3,
+    position: {x: 0, y: 5},
+    type: "large"
+  }, {direction: true, length: 3, position: {x: 4, y: 7}, type: "large"}, {
+    direction: true,
+    length: 2,
+    position: {x: 8, y: 1},
+    type: "medium"
+  }, {direction: true, length: 2, position: {x: 8, y: 4}, type: "medium"}, {
+    direction: true,
+    length: 2,
+    position: {x: 3, y: 1},
+    type: "medium"
+  }, {direction: true, length: 1, position: {x: 1, y: 1}, type: "small"}, {
+    direction: true,
+    length: 1,
+    position: {x: 2, y: 8},
+    type: "small"
+  }, {direction: false, length: 1, position: {x: 0, y: 7}, type: "small"}, {
+    direction: true,
+    length: 1,
+    position: {x: 5, y: 0},
+    type: "small"
+  }]
 ]
