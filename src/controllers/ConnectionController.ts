@@ -69,24 +69,29 @@ class ConnectionController {
     }
   }
 
-  private validateUserData(data: { name: any, password: any }): boolean {
+  private validateUserData(data: { name: any, password: any }): string {
     const {password, name} = data;
 
     if (!name || typeof name !== 'string') {
-      return false;
+      return 'invalid name';
+    }
+
+    const users = ConnectionController.users.values();
+    if (Array.from(users).find((user) => user.userData.name === name)) {
+      return 'user already exists';
     }
 
     if (!password || typeof password !== 'string') {
-      return false
+      return 'invalid password';
     }
 
-    return true;
+    return '';
   }
 
   private registerUser(data: any, id: number): void {
-    const isValid = this.validateUserData(data);
+    const validError = this.validateUserData(data);
 
-    if (!isValid) return this.sendError(id, 'Invalid data');
+    if (validError) return this.sendError(id, validError);
 
     const {name, password} = data;
 
@@ -218,7 +223,6 @@ class ConnectionController {
 
     this.sendTurn(id);
   }
-
 
   private attackResponse(params: AttackResponseParams,): void {
     const {members, result, position, id} = params;
