@@ -12,9 +12,11 @@ export class GameBot {
   name = `GameBot_${GameBot.counter++}`;
   room: Room;
   idGame: string;
+  indexPlayer: string;
 
   ships: ShipParams[] = [];
   field: FIELD_STATE[][] = getEmptyField();
+  enemyField: FIELD_STATE[][] = getEmptyField();
 
   constructor(room: Room) {
     this.room = room;
@@ -31,6 +33,10 @@ export class GameBot {
     const dataObj = JSON.parse(messageData);
 
     switch (type) {
+      case MessageType.REG: {
+        this.indexPlayer = dataObj.index;
+        break;
+      }
       case MessageType.CREATE_GAME: {
         this.idGame = dataObj.id;
         break;
@@ -38,11 +44,27 @@ export class GameBot {
       case MessageType.ATTACK: {
         return this.handleAttack(dataObj);
       }
+      case MessageType.TURN: {
+        return this.handleTurn(dataObj);
+      }
     }
   }
 
   handleAttack(data: unknown) {
     console.log("bot attack", data);
+  }
+
+  handleTurn(data: { currentPlayer: string }) {
+    if (data.currentPlayer === this.indexPlayer) {
+      this.controller.handleMessage({
+        id: '0',
+        type: MessageType.RANDOM_ATTACK,
+        data: JSON.stringify({
+          gameId: this.idGame,
+          indexPlayer: this.indexPlayer
+        })
+      })
+    }
   }
 
   private initBotUser() {
@@ -64,11 +86,17 @@ export class GameBot {
 
   private addShips() {
     const ships = this.generateShipsData();
-    console.log("ships", ships)
+
+    const data = {
+      gameID: this.idGame,
+      ships,
+      indexPlayer: this.indexPlayer
+    }
+
     this.controller.handleMessage({
       id: '0',
       type: MessageType.ADD_SHIPS,
-      data: JSON.stringify(ships)
+      data: JSON.stringify(data)
     })
   }
 
